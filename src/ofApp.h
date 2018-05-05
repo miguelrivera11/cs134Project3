@@ -45,6 +45,9 @@ class ofApp : public ofBaseApp{
 		void drawBox(const Box &box);
 		Box meshBounds(const ofMesh &);
 		void subDivideBox8(const Box &b, vector<Box> & boxList);
+		void resetRocket();
+
+		void loadVbo();
 
 		bool mouseIntersectPlane(ofVec3f planePoint, ofVec3f planeNorm, ofVec3f &point);
 
@@ -67,9 +70,17 @@ class ofApp : public ofBaseApp{
 	
 		ofVec3f selectedPoint;
 		ofVec3f intersectPoint;
-		ofMesh mesh;
+		ofMesh surfaceMesh;
+		Box landerBox;
 		Node octreeHead;
 
 		const float selectionRange = 4.0;
 		Lander lander;
+		bool checkCollisions();
+		float LANDER_SCALE;
+
+		ofTexture particleTex;
+
+		ofVbo vbo;
+		ofShader shader;
 };

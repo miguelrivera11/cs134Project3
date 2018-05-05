@@ -1,7 +1,8 @@
 #include "vector3.h"
 #include "ray.h"
 #include "box.h"
-  
+#include "ofApp.h"
+
 /*
  * Ray-box intersection using IEEE numerical properties to ensure that the
  * test is both robust and efficient, as described in:
@@ -42,3 +43,4 @@ bool Box::hasPointWithin(Vector3 point) {
 	return point.x() <= max.x() && point.y() <= max.y() && point.z() <= max.z()
 		&& point.x() >= min.x() && point.y() >= min.y() && point.z() >=  min.z();
 }
+
