@@ -115,6 +115,21 @@ void Lander::moveRight() {
 	thrustForce->add(ofVec3f(thrustAmount, 0, 0));
 }
 
+void Lander::moveForward() {
+	if (hasSound && !thrustSound.isPlaying())
+		thrustSound.play();
+	leftExhaust.start();
+	rightExhaust.start();
+	thrustForce->add(ofVec3f(0, 0,thrustAmount));
+}
+
+void Lander::moveBack() {
+	if (hasSound && !thrustSound.isPlaying())
+		thrustSound.play();
+	frontExhaust.start();
+	thrustForce->add(ofVec3f(0,0,-thrustAmount));
+}
+
 void Lander::getLanderBoxPoints(std::vector<Vector3> &points)
 {
 	Vector3 min = boundingBox.min();

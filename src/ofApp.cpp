@@ -110,6 +110,9 @@ void ofApp::draw(){
 	glDepthMask(GL_TRUE);
 
 	cam.end();
+	string altitudeText;
+	altitudeText += "Altitude: " + std::to_string(altitude);
+	ofDrawBitmapString(altitudeText, ofPoint(10, 20));
 }
 // Draw an XYZ axis in RGB at world (0,0,0) for reference.
 //
@@ -157,7 +160,7 @@ void ofApp::keyPressed(int key) {
 		resetRocket();
 		break;
 	case 's':
-		savePicture();
+		lander.moveBack();
 		break;
 	case 't':
 		setCameraTarget();
@@ -170,7 +173,7 @@ void ofApp::keyPressed(int key) {
 	case 'V':
 		break;
 	case 'w':
-		toggleWireframeMode();
+		lander.moveForward();
 		break;
 	case OF_KEY_ALT:
 		cam.enableMouseInput();
@@ -405,8 +408,15 @@ bool ofApp::checkCollisions() {
 		vector<int> indicies;
 		rayCastSelection(indicies, &octreeHead, ray);
 		if (indicies.size() > 0) {
-			ofVec3f vel = lander.sys.particles[0].velocity;
-			lander.sys.particles[0].velocity.set(vel.x * drag, vel.z * drag, -vel.y);
+			ofVec3f collisionPoint = surfaceMesh.getVertex(indicies[0]);
+			altitude = lander.boundingBox.min().y()-collisionPoint.y;
+			float epsilon = lander.sys.particles[0].velocity.length() * (1.0 / 60.0);
+			float drag = 0.1;
+			if (altitude <= epsilon) {
+				ofVec3f vel = lander.sys.particles[0].velocity;
+				lander.sys.particles[0].velocity.set(vel.x * drag, vel.z * drag, -vel.y);
+				altitude = 0;
+			}
 		}
 	}
 	return true;
@@ -463,11 +473,10 @@ void ofApp::rayCastSelection(vector<int> &indicies, Node *node, Ray ray) {
 	if (node->indicies.size() == 1) {
 		indicies.push_back(node->indicies[0]);
 	}
-	else if (node->box.intersect(ray, -1, 1)) {
+	else if (node->box.intersect(ray, -10000, 10000)) {
 		ofVec3f v;
-		float epsilon = lander.sys.particles[0].velocity.length() * (1.0 / 60.0);
 		for (int i = 0; i < node->children.size(); i++) {
-			if (node->children[i].box.intersect(ray, -epsilon, epsilon))
+			if (node->children[i].box.intersect(ray, -10000, 10000))
 				rayCastSelection(indicies, &node->children[i], ray);
 		}
 	}
@@ -475,6 +484,7 @@ void ofApp::rayCastSelection(vector<int> &indicies, Node *node, Ray ray) {
 
 void ofApp::resetRocket() {
 	lander.setPosition(ofVec3f(0, 30, 0));
+	lander.sys.particles[0].velocity.set(0, 0, 0);
 }
 
 void ofApp::loadVbo() {

@@ -22,6 +22,8 @@ public:
 	void getLanderBoxPointsofVec3f(std::vector<ofVec3f>& points);
 	void moveUp();
 	void moveDown();
+	void moveForward();
+	void moveBack();
 	void stopThrust();
 	void setMainExhaustOffset(ofVec3f offset) { mainExhaustOffset = offset;}
 	void setLeftExhaustOffset(ofVec3f offset) { leftExhaustOffset = offset; }

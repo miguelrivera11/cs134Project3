@@ -83,4 +83,5 @@ class ofApp : public ofBaseApp{
 
 		ofVbo vbo;
 		ofShader shader;
+		float altitude;
 };
