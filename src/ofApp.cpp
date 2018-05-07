@@ -56,12 +56,68 @@ void ofApp::setup(){
 	for (int i = 0; i < numofVerticies; i++)
 		octreeHead.indicies.push_back(i);
 	createOctree(&octreeHead);
+
+	//added below
+	ofEnableLighting();
+
+	// Setup 3 - Light System
+	// square shaped
+	keyLight.setup();
+	keyLight.enable();
+	keyLight.setAreaLight(1, 1);
+	keyLight.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
+	keyLight.setDiffuseColor(ofFloatColor(1, 1, 1));
+	keyLight.setSpecularColor(ofFloatColor(1, 1, 1));
+	
+
+	keyLight.rotate(45, ofVec3f(0, 1, 0));
+	keyLight.rotate(-45, ofVec3f(1, 0, 0));
+	keyLight.setPosition(50, 50, 50);
+
+	fillLight.setup();
+	fillLight.enable();
+	fillLight.setSpotlight();
+	fillLight.setScale(.05);
+	fillLight.setSpotlightCutOff(15);
+	fillLight.setAttenuation(2, .001, .001);
+	fillLight.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
+	fillLight.setDiffuseColor(ofFloatColor(1, 1, 1));
+	fillLight.setSpecularColor(ofFloatColor(1, 1, 1));
+	fillLight.rotate(-10, ofVec3f(1, 0, 0));
+	fillLight.rotate(-45, ofVec3f(0, 1, 0));
+	fillLight.setPosition(-50, 50, 50);
+
+	rimLight.setup();
+	rimLight.enable();
+	rimLight.setSpotlight();
+	rimLight.setScale(.05);
+	rimLight.setSpotlightCutOff(30);
+	rimLight.setAttenuation(.2, .001, .001);
+	rimLight.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
+	rimLight.setDiffuseColor(ofFloatColor(1, 1, 1));
+	rimLight.setSpecularColor(ofFloatColor(1, 1, 1));
+	rimLight.rotate(180, ofVec3f(0, 1, 0));
+	rimLight.setPosition(0, 50, -7);
+
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 	lander.update();
 	checkCollisions();
+
+	//POSITIONING CAMERA BASED ON MODE
+	if (camMode < 3) cam.lookAt(lander.sys.particles[0].position);
+	else if (camMode == 3) {
+		//cam.setPosition(lander.sys.particles[0].position-ofVec3f(lander.boundingBox.max().x()/2)); //TODO: add 1/2 size of lander
+		cam.setPosition(lander.sys.particles[0].position + ofVec3f(0, 0, lander.boundingBox.max().z() / 2));
+		cam.lookAt(ofVec3f(cam.getPosition().x, cam.getPosition().y, cam.getPosition().z * 2));
+	}
+	else if (camMode == 4) {
+		cam.setPosition(lander.sys.particles[0].position - ofVec3f(0, lander.boundingBox.max().y() / 2)); //TODO: add 1/2 size of lander and watch out when the particle's position is less than 0
+		cam.lookAt(ofVec3f(cam.getPosition().x, cam.getPosition().y - 10, cam.getPosition().z));
+	}
+
 }
 
 //--------------------------------------------------------------
@@ -79,12 +135,12 @@ void ofApp::draw(){
 		ofDisableLighting();
 		ofSetColor(ofColor::slateGray);
 		surface.drawWireframe();
-		if (bTerrainSelected) drawAxis(ofVec3f(0, 0, 0));
+		//if (bTerrainSelected) drawAxis(ofVec3f(0, 0, 0));
 	}
 	else {
 		ofEnableLighting();              // shaded mode
 		surface.drawFaces();
-		if (bTerrainSelected) drawAxis(ofVec3f(0, 0, 0));
+		//if (bTerrainSelected) drawAxis(ofVec3f(0, 0, 0));
 	}
 
 
@@ -108,6 +164,9 @@ void ofApp::draw(){
 	ofDisableBlendMode();
 	ofEnableAlphaBlending();
 	glDepthMask(GL_TRUE);
+	keyLight.draw();
+	fillLight.draw();
+	rimLight.draw();
 
 	cam.end();
 	string altitudeText;
@@ -152,11 +211,8 @@ void ofApp::keyPressed(int key) {
 	case 'f':
 		ofToggleFullscreen();
 		break;
-	case 'H':
-	case 'h':
-		break;
 	case 'r':
-		cam.reset();
+		//cam.reset();
 		resetRocket();
 		break;
 	case 's':
@@ -164,8 +220,6 @@ void ofApp::keyPressed(int key) {
 		break;
 	case 't':
 		setCameraTarget();
-		break;
-	case 'u':
 		break;
 	case 'v':
 		togglePointsDisplay();
@@ -197,6 +251,38 @@ void ofApp::keyPressed(int key) {
 		break;
 	case OF_KEY_RIGHT:
 		lander.moveRight();
+		break;
+	case 'u':
+		cam.setPosition(cam.getPosition() + ofVec3f(0, 1, 0));
+		break;
+	case 'h':
+		cam.setPosition(cam.getPosition() + ofVec3f(-1, 0, 0));
+		break;
+	case 'j':
+		cam.setPosition(cam.getPosition() + ofVec3f(0, -1, 0));
+		break;
+	case 'k':
+		cam.setPosition(cam.getPosition() + ofVec3f(1, 0, 0));
+		break;
+	case 'y':
+		cam.setPosition(cam.getPosition() + ofVec3f(0, 0, -1));
+		break;
+	case 'i':
+		cam.setPosition(cam.getPosition() + ofVec3f(0, 0, 1));
+		break;
+	case '1':
+		cam.setPosition(cam1);
+		camMode = 1;
+		break;
+	case '2':
+		cam.setPosition(cam2);
+		camMode = 2;
+		break;
+	case '3':
+		camMode = 3;
+		break;
+	case '4':
+		camMode = 4;
 		break;
 	default:
 		break;

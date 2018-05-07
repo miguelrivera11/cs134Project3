@@ -58,6 +58,13 @@ class ofApp : public ofBaseApp{
 		ofLight light;
 		Box boundingBox;
 		vector<Box> level1, level2, level3;
+
+		ofVec3f cam1 = ofVec3f(0, 20, 50);
+		ofVec3f cam2 = ofVec3f(0, 20, -50);
+		ofVec3f cam3; // front cam
+		ofVec3f cam4; // ground cam
+		ofLight keyLight, fillLight, rimLight;
+		int camMode;
 	
 		bool bAltKeyDown;
 		bool bCtrlKeyDown;
