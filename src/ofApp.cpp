@@ -1,5 +1,17 @@
 #include "ofApp.h"
 #include "Util.h"
+/*
+* ARROW KEYS = MOVE IN X AND Y
+* W and S = MOVE IN Z 
+* HUKJ = CAMERA MOVE
+* YI = CAMERA ZOOM
+* CAMERA MODES:
+* 1 = SIDE VIEW 1
+* 2 = SIDE VIEW 2
+* 3 = ONBOARD FROM SIDE
+* 4 = ONBOARD FROM BOTTOM
+* key light follows the ship
+*/
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -13,6 +25,8 @@ void ofApp::setup(){
 	cam.setDistance(10);
 	cam.setNearClip(.1);
 	cam.setFov(65.5);   // approx equivalent to 28mm in 35mm format
+	camMode = 1;
+	cam.setPosition(cam1);
 	ofSetVerticalSync(true);
 	//cam.disableMouseInput();
 	ofEnableSmoothing();
@@ -40,7 +54,7 @@ void ofApp::setup(){
 	surface.loadModel("geo/moon-houdini.obj");
 	surface.setScaleNormalization(false);
 	LANDER_SCALE = 0.04;
-	lander.init("geo/retro_rocket.obj", LANDER_SCALE, ofVec3f (0, 30, 0));
+	lander.init("geo/retro_rocket.obj", LANDER_SCALE, ofVec3f (0, 100, 0));
 	lander.setMainExhaustOffset(ofVec3f(0, -9, 0));
 	lander.setLeftExhaustOffset(ofVec3f(0.9, 0, 0.9));
 	lander.setRightExhaustOffset(ofVec3f(-0.9, 0, 0.9));
@@ -56,55 +70,61 @@ void ofApp::setup(){
 	for (int i = 0; i < numofVerticies; i++)
 		octreeHead.indicies.push_back(i);
 	createOctree(&octreeHead);
+	impulse = new ImpulseForce();
+	lander.sys.addForce(impulse);
 
-	//added below
 	ofEnableLighting();
 
 	// Setup 3 - Light System
 	// square shaped
 	keyLight.setup();
 	keyLight.enable();
+	//keyLight.setDirectional();
+	keyLight.setPointLight();
 	keyLight.setAreaLight(1, 1);
-	keyLight.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
-	keyLight.setDiffuseColor(ofFloatColor(1, 1, 1));
-	keyLight.setSpecularColor(ofFloatColor(1, 1, 1));
-	
+	keyLight.setAmbientColor(ofColor(216, 41, 79));
+	keyLight.setDiffuseColor(ofColor(69, 22, 127));
+	keyLight.setSpecularColor(ofColor(69, 22, 127));
 
-	keyLight.rotate(45, ofVec3f(0, 1, 0));
-	keyLight.rotate(-45, ofVec3f(1, 0, 0));
-	keyLight.setPosition(50, 50, 50);
+	//keyLight.rotate(45, ofVec3f(0, 1, 0));
+	//keyLight.rotate(-45, ofVec3f(1, 0, 0));
+	keyLight.setPosition(cam1);
+	keyLight.lookAt(lander.sys.particles[0].position);
 
 	fillLight.setup();
 	fillLight.enable();
 	fillLight.setSpotlight();
-	fillLight.setScale(.05);
-	fillLight.setSpotlightCutOff(15);
-	fillLight.setAttenuation(2, .001, .001);
-	fillLight.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
-	fillLight.setDiffuseColor(ofFloatColor(1, 1, 1));
-	fillLight.setSpecularColor(ofFloatColor(1, 1, 1));
+	fillLight.setScale(0.7);
+	fillLight.setSpotlightCutOff(50);
+	fillLight.setAttenuation(2, 0, 0);
+	fillLight.setAmbientColor(ofColor(69, 22, 127));
+	fillLight.setDiffuseColor(ofColor(19, 178, 69));
+	fillLight.setSpecularColor(ofColor(19, 178, 69));
 	fillLight.rotate(-10, ofVec3f(1, 0, 0));
 	fillLight.rotate(-45, ofVec3f(0, 1, 0));
-	fillLight.setPosition(-50, 50, 50);
+	fillLight.setPosition(100, 200, 100);
+	fillLight.lookAt(lander.sys.particles[0].position);
+
 
 	rimLight.setup();
 	rimLight.enable();
-	rimLight.setSpotlight();
+	//rimLight.setSpotlight();
 	rimLight.setScale(.05);
-	rimLight.setSpotlightCutOff(30);
-	rimLight.setAttenuation(.2, .001, .001);
-	rimLight.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
-	rimLight.setDiffuseColor(ofFloatColor(1, 1, 1));
-	rimLight.setSpecularColor(ofFloatColor(1, 1, 1));
+	//rimLight.setSpotlightCutOff(50);
+	rimLight.setAttenuation(.2, .1, .1);
+	rimLight.setAmbientColor(ofColor(216, 41, 79));
+	rimLight.setDiffuseColor(ofColor(216, 41, 79));
+	rimLight.setSpecularColor(ofColor(216, 41, 79));
 	rimLight.rotate(180, ofVec3f(0, 1, 0));
-	rimLight.setPosition(0, 50, -7);
-
+	rimLight.setPosition(0, 60, -70);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 	lander.update();
 	checkCollisions();
+	keyLight.lookAt(lander.sys.particles[0].position);
+	fillLight.lookAt(lander.sys.particles[0].position);
 
 	//POSITIONING CAMERA BASED ON MODE
 	if (camMode < 3) cam.lookAt(lander.sys.particles[0].position);
@@ -117,7 +137,6 @@ void ofApp::update(){
 		cam.setPosition(lander.sys.particles[0].position - ofVec3f(0, lander.boundingBox.max().y() / 2)); //TODO: add 1/2 size of lander and watch out when the particle's position is less than 0
 		cam.lookAt(ofVec3f(cam.getPosition().x, cam.getPosition().y - 10, cam.getPosition().z));
 	}
-
 }
 
 //--------------------------------------------------------------
@@ -167,7 +186,6 @@ void ofApp::draw(){
 	keyLight.draw();
 	fillLight.draw();
 	rimLight.draw();
-
 	cam.end();
 	string altitudeText;
 	altitudeText += "Altitude: " + std::to_string(altitude);
@@ -253,22 +271,28 @@ void ofApp::keyPressed(int key) {
 		lander.moveRight();
 		break;
 	case 'u':
-		cam.setPosition(cam.getPosition() + ofVec3f(0, 1, 0));
+		if (camMode == 2)
+			cam.setPosition(cam.getPosition() + ofVec3f(0, 1, 0));
 		break;
 	case 'h':
-		cam.setPosition(cam.getPosition() + ofVec3f(-1, 0, 0));
+		if (camMode == 2)
+			cam.setPosition(cam.getPosition() + ofVec3f(-1, 0, 0));
 		break;
 	case 'j':
-		cam.setPosition(cam.getPosition() + ofVec3f(0, -1, 0));
+		if (camMode == 2)
+			cam.setPosition(cam.getPosition() + ofVec3f(0, -1, 0));
 		break;
 	case 'k':
-		cam.setPosition(cam.getPosition() + ofVec3f(1, 0, 0));
+		if (camMode == 2)
+			cam.setPosition(cam.getPosition() + ofVec3f(1, 0, 0));
 		break;
 	case 'y':
-		cam.setPosition(cam.getPosition() + ofVec3f(0, 0, -1));
+		if (camMode == 2)
+			cam.setPosition(cam.getPosition() + ofVec3f(0, 0, 1));
 		break;
 	case 'i':
-		cam.setPosition(cam.getPosition() + ofVec3f(0, 0, 1));
+		if (camMode == 2)
+			cam.setPosition(cam.getPosition() + ofVec3f(0, 0, -1));
 		break;
 	case '1':
 		cam.setPosition(cam1);
@@ -497,11 +521,12 @@ bool ofApp::checkCollisions() {
 			ofVec3f collisionPoint = surfaceMesh.getVertex(indicies[0]);
 			altitude = lander.boundingBox.min().y()-collisionPoint.y;
 			float epsilon = lander.sys.particles[0].velocity.length() * (1.0 / 60.0);
-			float drag = 0.1;
-			if (altitude <= epsilon) {
-				ofVec3f vel = lander.sys.particles[0].velocity;
-				lander.sys.particles[0].velocity.set(vel.x * drag, vel.z * drag, -vel.y);
-				altitude = 0;
+			ofVec3f vel = lander.sys.particles[0].velocity;
+			if (altitude <= epsilon && vel.y < 0) {
+				float restitution = 0.35;
+				ofVec3f normal = surfaceMesh.getNormal(indicies[0]);
+				ofVec3f impulseForce = ((-vel).dot(normal)) * normal;
+				impulse->apply(impulseForce*(1000*restitution));
 			}
 		}
 	}
@@ -569,7 +594,8 @@ void ofApp::rayCastSelection(vector<int> &indicies, Node *node, Ray ray) {
 }
 
 void ofApp::resetRocket() {
-	lander.setPosition(ofVec3f(0, 30, 0));
+	lander.setPosition(ofVec3f(0, 15, 0));
+	lander.thrustForce->set(ofVec3f(0, 0, 0));
 	lander.sys.particles[0].velocity.set(0, 0, 0);
 }
 
