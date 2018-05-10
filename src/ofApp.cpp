@@ -523,7 +523,7 @@ bool ofApp::checkCollisions() {
 			float epsilon = lander.sys.particles[0].velocity.length() * (1.0 / 60.0);
 			ofVec3f vel = lander.sys.particles[0].velocity;
 			if (altitude <= epsilon && vel.y < 0) {
-				float restitution = 0.35;
+				float restitution = 0.2;
 				ofVec3f normal = surfaceMesh.getNormal(indicies[0]);
 				ofVec3f impulseForce = ((-vel).dot(normal)) * normal;
 				impulse->apply(impulseForce*(1000*restitution));
