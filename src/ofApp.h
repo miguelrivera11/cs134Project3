@@ -92,4 +92,6 @@ class ofApp : public ofBaseApp{
 		ofShader shader;
 		float altitude;
 		ImpulseForce *impulse;
+
+		ofImage background;
 };

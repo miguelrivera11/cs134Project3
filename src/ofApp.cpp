@@ -15,6 +15,9 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+
+	background.loadImage("images/star_background.png");
+
 	bWireframe = false;
 	bDisplayPoints = false;
 	bAltKeyDown = false;
@@ -125,6 +128,7 @@ void ofApp::update(){
 	checkCollisions();
 	keyLight.lookAt(lander.sys.particles[0].position);
 	fillLight.lookAt(lander.sys.particles[0].position);
+	cout << std::to_string(ofGetFrameRate()) <<endl;
 
 	//POSITIONING CAMERA BASED ON MODE
 	if (camMode < 3) cam.lookAt(lander.sys.particles[0].position);
@@ -146,6 +150,17 @@ void ofApp::draw(){
 	ofBackground(ofColor::black);
 	//	cout << ofGetFrameRate() << endl;
 	loadVbo();
+
+	//background here
+
+
+	ofSetColor(255, 255, 255);
+	ofDisableDepthTest();
+
+	background.draw(0, 0, ofGetWindowWidth(), ofGetWindowHeight());
+	ofEnableDepthTest();
+
+
 
 
 	cam.begin();
@@ -183,9 +198,9 @@ void ofApp::draw(){
 	ofDisableBlendMode();
 	ofEnableAlphaBlending();
 	glDepthMask(GL_TRUE);
-	keyLight.draw();
-	fillLight.draw();
-	rimLight.draw();
+	//keyLight.draw();
+	//fillLight.draw();
+	//rimLight.draw();
 	cam.end();
 	string altitudeText;
 	altitudeText += "Altitude: " + std::to_string(altitude);
@@ -520,13 +535,13 @@ bool ofApp::checkCollisions() {
 		if (indicies.size() > 0) {
 			ofVec3f collisionPoint = surfaceMesh.getVertex(indicies[0]);
 			altitude = lander.boundingBox.min().y()-collisionPoint.y;
-			float epsilon = lander.sys.particles[0].velocity.length() * (1.0 / 60.0);
+			float epsilon = lander.sys.particles[0].velocity.length() * (1.0 / ofGetFrameRate());
 			ofVec3f vel = lander.sys.particles[0].velocity;
 			if (altitude <= epsilon && vel.y < 0) {
 				float restitution = 0.2;
 				ofVec3f normal = surfaceMesh.getNormal(indicies[0]);
 				ofVec3f impulseForce = ((-vel).dot(normal)) * normal;
-				impulse->apply(impulseForce*(1000*restitution));
+				impulse->apply(impulseForce*(ofGetFrameRate() * (10 * restitution)));
 			}
 		}
 	}
